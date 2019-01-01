@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane id="GridPane" xmlns:fx="http://javafx.com/fxml/1" fx:controller="e.mail.EmailFXMLController" alignment="center" hgap="10" vgap="10">
+    <padding>
+        <Insets top="25" right="25" bottom="25" left="25"/>
+    </padding>
+    <children>
+        <Label style="-fx-font-weight: bold; -fx-font-size: 24;" text="E(pic) - mail" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.columnSpan="1" fx:id= "label4" />
+        <Button  text="Send/Recieve" GridPane.columnIndex = "0" GridPane.rowIndex = "0" GridPane.columnSpan="1" fx:id="SendRecieveButton" onAction = "#handleRecieve"/>
+        <Button text="New Message" GridPane.columnIndex = "0" GridPane.rowIndex = "1" GridPane.columnSpan="1"  fx:id="newMessageButton" onAction = "#handleNewMessage"/>
+        <Button text="New Contact" GridPane.columnIndex = "0" GridPane.rowIndex = "2" GridPane.columnSpan="1"  fx:id="newContactButton" onAction = "#handleNewContact"/>
+        <Label style="-fx-font-weight: bold;" text="Contacts" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.columnSpan="1" fx:id= "label1"/>
+        <ListView GridPane.columnIndex = "1" GridPane.rowIndex = "3" GridPane.rowSpan = "1" GridPane.columnSpan="1" fx:id="contactsL" onMouseClicked = "#handleContacts"/>
+        <Label style="-fx-font-weight: bold;" text="Recieved" GridPane.columnIndex="2" GridPane.rowIndex="2" GridPane.columnSpan="1" fx:id= "label2"/>
+        <ListView GridPane.columnIndex = "2" GridPane.rowIndex = "3" GridPane.rowSpan = "1" GridPane.columnSpan="1" fx:id="recievedL" onMouseClicked = "#handleRecieved"/>
+        <Label style="-fx-font-weight: bold;" text="Send" GridPane.columnIndex="3" GridPane.rowIndex="2" GridPane.columnSpan="1" fx:id= "label3"/>
+        <ListView GridPane.columnIndex = "3" GridPane.rowIndex = "3" GridPane.rowSpan = "1" GridPane.columnSpan="1" fx:id="sendL" onMouseClicked = "#handleSend"/>
+    </children>
+</GridPane>
