@@ -13,7 +13,7 @@
     </padding>
     <children>
         <Label style="-fx-font-weight: bold; -fx-font-size: 24;" text="E(pic) - mail" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.columnSpan="1" fx:id= "label4" />
-        <Button  text="Send/Recieve" GridPane.columnIndex = "0" GridPane.rowIndex = "0" GridPane.columnSpan="1" fx:id="SendRecieveButton" onAction = "#handleRecieve"/>
+        <Button  text="Send/Recieve" GridPane.columnIndex = "0" GridPane.rowIndex = "0" GridPane.columnSpan="1" fx:id="sendRecieveButton" onAction = "#handleRecieve"/>
         <Button text="New Message" GridPane.columnIndex = "0" GridPane.rowIndex = "1" GridPane.columnSpan="1"  fx:id="newMessageButton" onAction = "#handleNewMessage"/>
         <Button text="New Contact" GridPane.columnIndex = "0" GridPane.rowIndex = "2" GridPane.columnSpan="1"  fx:id="newContactButton" onAction = "#handleNewContact"/>
         <Label style="-fx-font-weight: bold;" text="Contacts" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.columnSpan="1" fx:id= "label1"/>

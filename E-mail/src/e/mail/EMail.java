@@ -15,7 +15,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 /**
@@ -74,7 +73,7 @@ public class EMail extends Application {
         sendList.add(new Mail("swag@wtf.com","topic1","TEST321"));
         contactList.add(new Contact("Frajer","pylylyly@wtf.com"));
         launch(args);
-        //clientSocket.close();
+        clientSocket.close();
     }
     
 }

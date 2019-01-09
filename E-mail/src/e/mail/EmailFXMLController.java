@@ -9,6 +9,7 @@ import static e.mail.EMail.clientSocket;
 import javafx.geometry.Insets;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
@@ -24,6 +25,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -33,6 +36,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Pair;
 
 /**
@@ -50,6 +54,9 @@ public class EmailFXMLController implements Initializable {
     
     @FXML
     private Label label2;
+    
+    @FXML
+    private Button sendRecieveButton;
     
     @FXML
     private ListView<Mail> recievedL = new ListView<>();
@@ -120,14 +127,25 @@ public class EmailFXMLController implements Initializable {
     //TODO - Odbieranie Maili
     @FXML private void handleRecieve(Event event) throws IOException{
         //TODO - recieve by socket
-        BufferedReader reader;
+        Window owner = sendRecieveButton.getScene().getWindow();
+        byte[] buffer = new byte[1000];
         try {
-            reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            String serverMessage = reader.readLine();
-            
-            System.out.println(serverMessage);
+            InputStream is = clientSocket.getInputStream();
+            is.read(buffer);
+            System.out.println(new String(buffer, "US-ASCII"));
+            String fullMsg = new String(buffer, "US-ASCII");
+            //TODO create email
+            //M - message - 0
+            //odbiorca - 1
+            //nadawca - 2
+            //topic - 3
+            //message - 4
+            String[] parts = fullMsg.split("^");
+            Mail newMail = new Mail(parts[2], parts[3], parts[4]);
+            EMail.recievedList.add(newMail);
         } catch (IOException ex) {
             Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
+            AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Error!", "Blad - sprobuj ponownie !");
         }
 	
     }

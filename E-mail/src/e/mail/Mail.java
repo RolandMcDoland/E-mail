@@ -20,13 +20,6 @@ public class Mail {
         this.topic = topic;
         this.message = message;
     }
-    
-    public Mail(String adress, String message){
-        this.adress = adress;
-        //TODO - Topic Creator
-        this.topic = "";
-        this.message = message;
-    }
 
     public String getTopic() {
         return topic;
@@ -53,7 +46,7 @@ public class Mail {
     }
     
     public String getFullMsg(){
-        return this.adress + "^" + this.topic + "^" + this.message;
+        return this.adress + "^" + EMail.loggedUser + "^" + this.topic + "^" + this.message;
     }
     
     @Override

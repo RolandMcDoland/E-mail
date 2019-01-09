@@ -10,13 +10,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /**
  * FXML Controller class
@@ -44,13 +48,21 @@ public class NewMessageController implements Initializable {
     private Button cancel;
     
     @FXML private void handleSend(Event event) throws IOException{
+        Window owner = send.getScene().getWindow();
         Mail mail = new Mail(address.getText(),topic.getText(),textField.getText());
-        EMail.sendList.add(mail);
         //TODO - send by socket
         //M - wiadomosc
-        OutputStream os = clientSocket.getOutputStream();
-	String msg = "M^" + mail.getFullMsg();
-	os.write(msg.getBytes());
+        try{
+            OutputStream os = clientSocket.getOutputStream();
+            String msg = "M^" + EMail.loggedUser + "^" + mail.getFullMsg();
+            os.write(msg.getBytes());
+            AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Success!", "Wiadomosc wyslana pomyslnie !");
+            EMail.sendList.add(mail);
+        } catch (IOException ex) {
+                Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Error!", "Blad - sprobuj ponownie !");
+        }
+        
     }
     
     @FXML private void handleCancel(Event event) throws IOException{
