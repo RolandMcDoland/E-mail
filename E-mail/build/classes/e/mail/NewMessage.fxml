@@ -2,10 +2,22 @@
 
 <?import java.lang.*?>
 <?import java.util.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="e.mail.NewMessageController">
+<GridPane id="GridPane" xmlns:fx="http://javafx.com/fxml/1" fx:controller="e.mail.NewMessageController" alignment="center" hgap="10" vgap="10">
+    <padding>
+        <Insets top="25" right="25" bottom="25" left="25"/>
+    </padding>
+    <children>
+        <Label style="-fx-font-weight: bold; -fx-font-size: 24;" text="New mail" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="1" fx:id= "label4" />
+        <TextField GridPane.columnIndex = "0" GridPane.rowIndex = "1" GridPane.columnSpan="1" fx:id="address" />
+        <TextField GridPane.columnIndex = "0" GridPane.rowIndex = "2" GridPane.columnSpan="1" fx:id="topic" />
+        <TextArea GridPane.columnIndex = "0" GridPane.rowIndex = "3" GridPane.columnSpan="1" GridPane.rowSpan="3" fx:id="textField" />
+        <Button text="Send" GridPane.columnIndex = "0" GridPane.rowIndex = "6" GridPane.columnSpan="1"  fx:id="send" onAction = "#handleSend"/>
+        <Button text="Cancel" GridPane.columnIndex = "0" GridPane.rowIndex = "7" GridPane.columnSpan="1"  fx:id="cancel" onAction = "#handleCancel"/>
+    </children>
     
-</AnchorPane>
+</GridPane>

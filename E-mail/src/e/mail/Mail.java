@@ -14,11 +14,26 @@ public class Mail {
     String topic;
     String message;
 
-    public Mail(String adress, String message) {
+    public Mail(String adress, String topic, String message) {
         this.adress = adress;
         //TODO - Topic Creator
-        this.topic = message;
+        this.topic = topic;
         this.message = message;
+    }
+    
+    public Mail(String adress, String message){
+        this.adress = adress;
+        //TODO - Topic Creator
+        this.topic = "";
+        this.message = message;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public String getAdress() {
@@ -35,6 +50,10 @@ public class Mail {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+    
+    public String getFullMsg(){
+        return this.adress + "^" + this.topic + "^" + this.message;
     }
     
     @Override
