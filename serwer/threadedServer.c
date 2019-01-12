@@ -12,8 +12,8 @@
 #include <time.h>
 #include <pthread.h>
 
-#define SERVER_PORT 1234
-#define QUEUE_SIZE 5
+#define SERVER_PORT 8080
+#define QUEUE_SIZE 15
 
 //struktura zawierająca dane o klientach i wiadomości do wyslania do nich
 struct client_data
@@ -71,9 +71,10 @@ void handleInput(char msg[],int sock_desci)
             char nicki[16];
             
             strcpy(nicki,findElement(msg));
-            
+            ("Tutaj\n");
             client_list[last_id].sock_desc=sock_desci;
             strcpy(client_list[last_id].nick,nicki);
+            printf("%d %s\n",client_list[last_id].sock_desc,client_list[last_id].nick);
             
             //powiadomienie uzytkownika o zalogowaniu
             strcpy(to_send_next.message,"M/None/Serwer/Zalogowano");
@@ -119,8 +120,8 @@ void handleConnection(int connection_socket_descriptor) {
     pthread_t thread1;
 
     //dane, które zostaną przekazane do wątku
-    struct thread_data_t* t_data;
-    
+    struct thread_data_t* t_data=malloc(sizeof(struct thread_data_t));
+
     //wypełnienie pól struktury
     t_data->sock_desc=connection_socket_descriptor;
 
@@ -129,6 +130,7 @@ void handleConnection(int connection_socket_descriptor) {
        printf("Błąd przy próbie utworzenia wątku, kod błędu: %d\n", create_result);
        exit(-1);
     }
+    printf("Utworzono watek\n");
     
     //zmienna przechowująca deskryptor gniazda odbiorcy
     int recipiant_fd=-1;
@@ -178,6 +180,7 @@ int main(int argc, char* argv[])
        exit(1);
    }
    setsockopt(server_socket_descriptor, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse_addr_val, sizeof(reuse_addr_val));
+   printf("Utworzono gniazdo\n");
 
    bind_result = bind(server_socket_descriptor, (struct sockaddr*)&server_address, sizeof(struct sockaddr));
    if (bind_result < 0)
@@ -185,12 +188,14 @@ int main(int argc, char* argv[])
        fprintf(stderr, "%s: Błąd przy próbie dowiązania adresu IP i numeru portu do gniazda.\n", argv[0]);
        exit(1);
    }
+   printf("Dowiazano ardes IP i numer portu\n");
 
    listen_result = listen(server_socket_descriptor, QUEUE_SIZE);
    if (listen_result < 0) {
        fprintf(stderr, "%s: Błąd przy próbie ustawienia wielkości kolejki.\n", argv[0]);
        exit(1);
    }
+   printf("Ustawiono wielkosc kolejki\n");
 
    while(1)
    {
@@ -200,6 +205,7 @@ int main(int argc, char* argv[])
            fprintf(stderr, "%s: Błąd przy próbie utworzenia gniazda dla połączenia.\n", argv[0]);
            exit(1);
        }
+       printf("Utworzono gniazdo polaczenia\n");
 
        handleConnection(connection_socket_descriptor);
    }
