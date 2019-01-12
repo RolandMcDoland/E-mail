@@ -64,7 +64,7 @@ public class EMail extends Application {
      */
     public static void main(String[] args) throws IOException {
         try {
-            clientSocket = new Socket("127.0.0.1", 1234);
+            clientSocket = new Socket("192.168.0.103", 1234);
         } catch (IOException ex) {
             //AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Error!", "Błąd przy połączeniu z serwerem - Sprawdz Polaczenie !");
             Logger.getLogger(EMail.class.getName()).log(Level.SEVERE, null, ex);

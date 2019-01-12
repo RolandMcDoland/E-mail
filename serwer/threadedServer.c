@@ -15,25 +15,85 @@
 #define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 
+//struktura zawierająca dane o klientach i wiadomości do wyslania do nich
+struct client_data
+{
+    int sock_desc;
+    char nick[16];
+    char message[2048];
+};
+
 //struktura zawierająca dane, które zostaną przekazane do wątku
 struct thread_data_t
 {
-    char ip_adres[15];
+    int sock_desc;
+    int choice;
+    char sender[16];
+    char message[1024];
+    char recipiant[16];
 };
+
+//tablica zwierająca informacje o zalogowanych klientach
+struct client_data client_list[256];
+int last_id=0;
+
+//zmienna zawierająca następną wiadomość do wysłania i jej odbiorcę
+struct thread_data_t to_send;
+//zmienna zawierająca wiadomość do wyslania w następnej iteracji i jej odbiorcę
+struct thread_data_t to_send_next;
+
+//funkcja przetwarzająca dane wysłane przez klienta
+void handleInput(char msg[],int sock_desci)
+{
+    printf("W funkcji\n");
+    //w zależności od akcji wybranej przez klienta
+    switch(msg[0])
+    {
+        //dodanie do tablicy zalogowanych uzytkownikow
+        case 'L':
+            printf("Logowanie\n");
+            int i=2;
+            int j=0;
+            char nicki[16];
+            while(msg[i]!='/')
+            {
+                nicki[j]=msg[i];
+                i++;
+                j++;
+            }
+            printf("%s\n",nicki);
+            client_list[last_id].sock_desc=sock_desci;
+            strcpy(client_list[last_id].nick,nicki);
+            //powiadomienie uzytkownika o zalogowaniu
+            strcpy(to_send_next.message,"Zalogowano");
+            strcpy(to_send_next.sender,"Serwer");
+            strcpy(to_send_next.recipiant,nicki);
+            break;
+        //odebranie wiadomości i zapisanie jej do przekazania do odbiorcy
+        /*case 1:
+            strcpy(to_send_next->message,data->message);
+            strcpy(to_send_next->recipiant,data->recipiant);
+            strcpy(to_send_next->sender,data->sender);
+            break;*/
+    }
+}
 
 //funkcja opisującą zachowanie wątku - musi przyjmować argument typu (void *) i zwracać (void *)
 void *ThreadBehavior(void *t_data)
 {
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
+    char msg[4096];
     //dostęp do pól struktury: (*th_data).pole
-    //TODO (przy zadaniu 1) klawiatura -> wysyłanie albo odbieranie -> wyświetlanie
+    //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
+    read((*th_data).sock_desc,msg,4096);
+    handleInput(msg,(*th_data).sock_desc);
 
     pthread_exit(NULL);
 }
 
 //funkcja obsługująca połączenie z nowym klientem
-void handleConnection(int connection_socket_descriptor, struct sockaddr_in *client_adress) {
+void handleConnection(int connection_socket_descriptor) {
     //wynik funkcji tworzącej wątek
     int create_result = 0;
 
@@ -41,20 +101,44 @@ void handleConnection(int connection_socket_descriptor, struct sockaddr_in *clie
     pthread_t thread1;
 
     //dane, które zostaną przekazane do wątku
-    struct thread_data_t t_data;
-
+    //dynamiczne utworzenie instancji struktury thread_data_t o nazwie t_data (+ w odpowiednim miejscu zwolnienie pamięci)
+    struct thread_data_t* t_data;
+    //wypełnienie pól struktury
+    t_data->sock_desc=connection_socket_descriptor;
 
     create_result = pthread_create(&thread1, NULL, ThreadBehavior, (void *)t_data);
     if (create_result){
        printf("Błąd przy próbie utworzenia wątku, kod błędu: %d\n", create_result);
        exit(-1);
     }
-
-    //TODO (przy zadaniu 1) odbieranie -> wyświetlanie albo klawiatura -> wysyłanie
+    
+    //TODO wysyłanie aktualnej wiadomości do odbiorcy
+    //zmienna przechowująca deskryptor gniazda odbiorcy
+    int recipiant_fd=-1;
+    //pętla wyszukująca wśród zalogowanych użytkowników odbiorcy wiadomości
+    for(int i=0;i<=last_id;i++)
+    {
+       if(strcmp(client_list[i].nick,to_send.recipiant))
+       {
+           recipiant_fd=client_list[i].sock_desc;
+       }
+    }
+    
+    //przesłanie wiadomości do odbiorcy
+    char msg[16];
+    //TODO wypelnienie msg
+    write(recipiant_fd,msg,2048);
+    
+    //oczekiwanie na zakończenie wątku
+    pthread_join(thread1,NULL);
+    
+    to_send=to_send_next;
 }
 
 int main(int argc, char* argv[])
 {
+   printf("Zaczynam\n");
+   handleInput("L/kupa/",1);
    int server_socket_descriptor;
    int connection_socket_descriptor;
    int bind_result;
@@ -92,15 +176,14 @@ int main(int argc, char* argv[])
 
    while(1)
    {
-       struct sockaddr_in client_address;
-       connection_socket_descriptor = accept(server_socket_descriptor, &client_address, NULL);
+       connection_socket_descriptor = accept(server_socket_descriptor, NULL, NULL);
        if (connection_socket_descriptor < 0)
        {
            fprintf(stderr, "%s: Błąd przy próbie utworzenia gniazda dla połączenia.\n", argv[0]);
            exit(1);
        }
 
-       handleConnection(connection_socket_descriptor, &client_address);
+       handleConnection(connection_socket_descriptor);
    }
 
    close(server_socket_descriptor);
