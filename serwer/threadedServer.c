@@ -36,6 +36,7 @@ int last_id=0;
 
 //zmienna zawierająca następną wiadomość do wysłania i jej odbiorcę
 struct thread_data_t to_send;
+
 //zmienna zawierająca wiadomość do wyslania w następnej iteracji i jej odbiorcę
 struct thread_data_t to_send_next;
 
@@ -87,8 +88,6 @@ void handleInput(char msg[],int sock_desci)
             char rec[16];
             
             strcpy(rec,findElement(msg));
-
-            printf("%s\n",rec);
             
             //wypełnienie struktury zawierającej wiadomość do wysłania
             strcpy(to_send_next.message,msg);
@@ -103,7 +102,7 @@ void *ThreadBehavior(void *t_data)
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
     char msg[4096];
-    //dostęp do pól struktury: (*th_data).pole
+
     //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
     read((*th_data).sock_desc,msg,4096);
     handleInput(msg,(*th_data).sock_desc);
@@ -120,8 +119,8 @@ void handleConnection(int connection_socket_descriptor) {
     pthread_t thread1;
 
     //dane, które zostaną przekazane do wątku
-    //dynamiczne utworzenie instancji struktury thread_data_t o nazwie t_data (+ w odpowiednim miejscu zwolnienie pamięci)
     struct thread_data_t* t_data;
+    
     //wypełnienie pól struktury
     t_data->sock_desc=connection_socket_descriptor;
 
@@ -131,9 +130,9 @@ void handleConnection(int connection_socket_descriptor) {
        exit(-1);
     }
     
-    //TODO wysyłanie aktualnej wiadomości do odbiorcy
     //zmienna przechowująca deskryptor gniazda odbiorcy
     int recipiant_fd=-1;
+    
     //pętla wyszukująca wśród zalogowanych użytkowników odbiorcy wiadomości
     for(int i=0;i<=last_id;i++)
     {
@@ -158,7 +157,6 @@ void handleConnection(int connection_socket_descriptor) {
 int main(int argc, char* argv[])
 {
    printf("Zaczynam\n");
-   handleInput("M/kupa/",1);
    int server_socket_descriptor;
    int connection_socket_descriptor;
    int bind_result;
