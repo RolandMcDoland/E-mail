@@ -20,16 +20,13 @@ struct client_data
 {
     int sock_desc;
     char nick[16];
-    char message[2048];
 };
 
 //struktura zawierająca dane, które zostaną przekazane do wątku
 struct thread_data_t
 {
     int sock_desc;
-    int choice;
-    char sender[16];
-    char message[1024];
+    char message[4096];
     char recipiant[16];
 };
 
@@ -42,39 +39,61 @@ struct thread_data_t to_send;
 //zmienna zawierająca wiadomość do wyslania w następnej iteracji i jej odbiorcę
 struct thread_data_t to_send_next;
 
+//funkcja znajdująca odpowiedni element w przesłanym tekście
+char* findElement(char msg[])
+{
+    int i=2;
+    int j=0;
+    static char element[16];
+            
+    while(msg[i]!='/')
+    {
+        element[j]=msg[i];
+        i++;
+        j++;
+    }
+    
+    return element;
+}
+
 //funkcja przetwarzająca dane wysłane przez klienta
 void handleInput(char msg[],int sock_desci)
 {
-    printf("W funkcji\n");
     //w zależności od akcji wybranej przez klienta
     switch(msg[0])
     {
         //dodanie do tablicy zalogowanych uzytkownikow
         case 'L':
             printf("Logowanie\n");
-            int i=2;
-            int j=0;
+            
+            //nazwa użytkownika który się loguje
             char nicki[16];
-            while(msg[i]!='/')
-            {
-                nicki[j]=msg[i];
-                i++;
-                j++;
-            }
-            printf("%s\n",nicki);
+            
+            strcpy(nicki,findElement(msg));
+            
             client_list[last_id].sock_desc=sock_desci;
             strcpy(client_list[last_id].nick,nicki);
+            
             //powiadomienie uzytkownika o zalogowaniu
-            strcpy(to_send_next.message,"Zalogowano");
-            strcpy(to_send_next.sender,"Serwer");
+            strcpy(to_send_next.message,"M/None/Serwer/Zalogowano");
             strcpy(to_send_next.recipiant,nicki);
             break;
+            
         //odebranie wiadomości i zapisanie jej do przekazania do odbiorcy
-        /*case 1:
-            strcpy(to_send_next->message,data->message);
-            strcpy(to_send_next->recipiant,data->recipiant);
-            strcpy(to_send_next->sender,data->sender);
-            break;*/
+        case 'M':
+            printf("Przygotowywanie wiadomości\n");
+            
+            //odbiorca wiadomości
+            char rec[16];
+            
+            strcpy(rec,findElement(msg));
+
+            printf("%s\n",rec);
+            
+            //wypełnienie struktury zawierającej wiadomość do wysłania
+            strcpy(to_send_next.message,msg);
+            strcpy(to_send_next.recipiant,rec);
+            break;
     }
 }
 
@@ -125,8 +144,9 @@ void handleConnection(int connection_socket_descriptor) {
     }
     
     //przesłanie wiadomości do odbiorcy
-    char msg[16];
-    //TODO wypelnienie msg
+    char msg[4096];
+    strcpy(msg,to_send.message);
+    
     write(recipiant_fd,msg,2048);
     
     //oczekiwanie na zakończenie wątku
@@ -138,7 +158,7 @@ void handleConnection(int connection_socket_descriptor) {
 int main(int argc, char* argv[])
 {
    printf("Zaczynam\n");
-   handleInput("L/kupa/",1);
+   handleInput("M/kupa/",1);
    int server_socket_descriptor;
    int connection_socket_descriptor;
    int bind_result;
