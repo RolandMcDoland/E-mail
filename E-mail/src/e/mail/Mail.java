@@ -46,7 +46,7 @@ public class Mail {
     }
     
     public String getFullMsg(){
-        return this.adress + "/" + EMail.loggedUser + "/" + this.topic + "/" + this.message;
+        return this.adress + "/" + EMail.loggedUser + "/" + this.topic + "/" + this.message+"/";
     }
     
     @Override
