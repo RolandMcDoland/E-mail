@@ -54,7 +54,7 @@ public class NewMessageController implements Initializable {
         //M - wiadomosc
         try{
             OutputStream os = clientSocket.getOutputStream();
-            String msg = "M^" + EMail.loggedUser + "^" + mail.getFullMsg();
+            String msg = "M/" + EMail.loggedUser + "/" + mail.getFullMsg();
             os.write(msg.getBytes());
             AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Success!", "Wiadomosc wyslana pomyslnie !");
             EMail.sendList.add(mail);

@@ -270,7 +270,7 @@ public class EmailFXMLController implements Initializable {
                 
                 OutputStream os = clientSocket.getOutputStream();
                 EMail.loggedUser = address.getText();
-                String msg = "L^"+address.getText();
+                String msg = "L/"+address.getText();
                 os.write(msg.getBytes());
                 //EMail.contactList.add(new Contact(usernamePassword.getKey(), usernamePassword.getValue()));
             } catch (IOException ex) {
