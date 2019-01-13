@@ -46,12 +46,19 @@ char* findElement(char msg[])
     int i=2;
     int j=0;
     static char element[16];
-            
+    
+    //dopóki nie natrafisz na znak / oddzielający różne elementy wiadomości przepisuj element
     while(msg[i]!='/')
     {
         element[j]=msg[i];
         i++;
         j++;
+    }
+    
+    //uzupelnij reszte stringa pustymi znakami
+    for(j;j<16;j++)
+    {
+        element[j]=0;
     }
     
     return element;
@@ -68,16 +75,18 @@ void handleInput(char msg[],int sock_desci)
             printf("Logowanie\n");
             
             //nazwa użytkownika który się loguje
-            char nicki[16];
-            
-            strcpy(nicki,findElement(msg));
+            char nicki[16]={0};
 
+            strcpy(nicki,findElement(msg));
+            printf("Zapisano uzytkownika\n");
             client_list[last_id].sock_desc=sock_desci;
             strcpy(client_list[last_id].nick,nicki);
+            last_id++;
             
             //powiadomienie uzytkownika o zalogowaniu
             strcpy(to_send_next.message,"M/None/Serwer/Logowanie/Zalogowano");
             strcpy(to_send_next.recipiant,nicki);
+            
             break;
             
         //odebranie wiadomości i zapisanie jej do przekazania do odbiorcy
@@ -85,13 +94,14 @@ void handleInput(char msg[],int sock_desci)
             printf("Przygotowywanie wiadomości\n");
             
             //odbiorca wiadomości
-            char rec[16];
+            char rec[16]={0};
             
             strcpy(rec,findElement(msg));
             
             //wypełnienie struktury zawierającej wiadomość do wysłania
             strcpy(to_send_next.message,msg);
             strcpy(to_send_next.recipiant,rec);
+            
             break;
     }
 }
@@ -102,7 +112,7 @@ void *ThreadBehavior(void *t_data)
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = malloc(sizeof(struct thread_data_t));
     th_data=(struct thread_data_t*)t_data;
-    char msg[4096];
+    char msg[4096]={0};
 
     //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
     read((*th_data).sock_desc,msg,4096);
@@ -137,20 +147,24 @@ void handleConnection(int connection_socket_descriptor) {
     int recipiant_fd=-1;
     
     //pętla wyszukująca wśród zalogowanych użytkowników odbiorcy wiadomości
-    for(int i=0;i<=last_id;i++)
+    for(int i=0;i<last_id;i++)
     {
-       if(strcmp(client_list[i].nick,to_send.recipiant))
+       if(!strcmp(client_list[i].nick,to_send.recipiant))
        {
            recipiant_fd=client_list[i].sock_desc;
+           break;
        }
     }
     
     //przesłanie wiadomości do odbiorcy
-    char msg[4096];
+    char msg[4096]={0};
     strcpy(msg,to_send.message);
     
-    write(recipiant_fd,msg,4096);
-    printf("Wyslano wiadomosc\n");
+    if(recipiant_fd!=-1)
+    {
+        write(recipiant_fd,msg,4096);
+        printf("Wyslano wiadomosc\n");
+    }
     
     //oczekiwanie na zakończenie wątku
     pthread_join(thread1,NULL);
