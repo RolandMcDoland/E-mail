@@ -71,13 +71,12 @@ void handleInput(char msg[],int sock_desci)
             char nicki[16];
             
             strcpy(nicki,findElement(msg));
-            ("Tutaj\n");
+
             client_list[last_id].sock_desc=sock_desci;
             strcpy(client_list[last_id].nick,nicki);
-            printf("%d %s\n",client_list[last_id].sock_desc,client_list[last_id].nick);
             
             //powiadomienie uzytkownika o zalogowaniu
-            strcpy(to_send_next.message,"M/None/Serwer/Zalogowano");
+            strcpy(to_send_next.message,"M/None/Serwer/Logowanie/Zalogowano");
             strcpy(to_send_next.recipiant,nicki);
             break;
             
@@ -101,11 +100,13 @@ void handleInput(char msg[],int sock_desci)
 void *ThreadBehavior(void *t_data)
 {
     pthread_detach(pthread_self());
-    struct thread_data_t *th_data = (struct thread_data_t*)t_data;
+    struct thread_data_t *th_data = malloc(sizeof(struct thread_data_t));
+    th_data=(struct thread_data_t*)t_data;
     char msg[4096];
 
     //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
     read((*th_data).sock_desc,msg,4096);
+    printf("Odczytano dane\n");
     handleInput(msg,(*th_data).sock_desc);
 
     pthread_exit(NULL);
@@ -148,7 +149,8 @@ void handleConnection(int connection_socket_descriptor) {
     char msg[4096];
     strcpy(msg,to_send.message);
     
-    write(recipiant_fd,msg,2048);
+    write(recipiant_fd,msg,4096);
+    printf("Wyslano wiadomosc\n");
     
     //oczekiwanie na zakończenie wątku
     pthread_join(thread1,NULL);
