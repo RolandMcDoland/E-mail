@@ -154,6 +154,7 @@ void handleConnection(int connection_socket_descriptor) {
     
     //oczekiwanie na zakończenie wątku
     pthread_join(thread1,NULL);
+    printf("Watek zakonczyl dzialanie\n");
     
     to_send=to_send_next;
 }

@@ -140,7 +140,7 @@ public class EmailFXMLController implements Initializable {
             //nadawca - 2
             //topic - 3
             //message - 4
-            String[] parts = fullMsg.split("^");
+            String[] parts = fullMsg.split("/");
             Mail newMail = new Mail(parts[2], parts[3], parts[4]);
             EMail.recievedList.add(newMail);
         } catch (IOException ex) {
