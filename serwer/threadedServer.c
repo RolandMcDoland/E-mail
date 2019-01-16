@@ -25,7 +25,7 @@ struct client_data
 //struktura zawierająca dane, które zostaną przekazane do wątku
 struct thread_data_t
 {
-    int sock_desc;
+    int sent;
     char message[4096];
     char recipiant[16];
 };
@@ -35,10 +35,37 @@ struct client_data client_list[256];
 int last_id=0;
 
 //zmienna zawierająca następną wiadomość do wysłania i jej odbiorcę
-struct thread_data_t to_send;
+struct thread_data_t to_send[32];
+int last_msg_id=0;
 
-//zmienna zawierająca wiadomość do wyslania w następnej iteracji i jej odbiorcę
-struct thread_data_t to_send_next;
+//funckja sprawdzająca czy użytkownik jest na liście zalogowanych i uaktualniająca jego deskryptor
+int checkPresence(char name[], int fd)
+{
+    int is_found=0;
+    
+    for(int i=0;i<last_id;i++)
+    {
+        if(!strcmp(name,client_list[i].nick))
+        {
+            client_list[i].sock_desc=fd;
+            is_found=1;
+        }
+    }
+    
+    return is_found;
+}
+
+//funkcja czyszcząca tablicę to_send
+void cleanup()
+{
+    for(int i=0;i<32;i++)
+    {
+        for(int j=0;j<16;j++)
+        {
+            to_send[i].recipiant[j]=0;
+        }
+    }
+}
 
 //funkcja znajdująca odpowiedni element w przesłanym tekście
 char* findElement(char msg[])
@@ -76,16 +103,31 @@ void handleInput(char msg[],int sock_desci)
             
             //nazwa użytkownika który się loguje
             char nicki[16]={0};
-
+            
+            //znalezienie użytkownika w wiadomości
             strcpy(nicki,findElement(msg));
-            printf("Zapisano uzytkownika\n");
-            client_list[last_id].sock_desc=sock_desci;
-            strcpy(client_list[last_id].nick,nicki);
-            last_id++;
+            
+            //sprawdzenie czy użytkownik jest już na liście zalogowanych 
+            int find_result=checkPresence(nicki,sock_desci);
+            //jeśli nie dopisanie użytkownika
+            if(!find_result)
+            {
+                client_list[last_id].sock_desc=sock_desci;
+                strcpy(client_list[last_id].nick,nicki);
+                last_id++;
+                printf("Zapisano uzytkownika\n");
+            }
             
             //powiadomienie uzytkownika o zalogowaniu
-            strcpy(to_send_next.message,"M/None/Serwer/Logowanie/Zalogowano");
-            strcpy(to_send_next.recipiant,nicki);
+            strcpy(to_send[last_msg_id].message,"M/None/Serwer/Logowanie/Zalogowano");
+            strcpy(to_send[last_msg_id].recipiant,nicki);
+            to_send[last_msg_id].sent=0;
+            last_msg_id++;
+            if(last_msg_id==32)
+            {
+                cleanup();
+                last_msg_id=0;
+            }
             
             break;
             
@@ -99,78 +141,61 @@ void handleInput(char msg[],int sock_desci)
             strcpy(rec,findElement(msg));
             
             //wypełnienie struktury zawierającej wiadomość do wysłania
-            strcpy(to_send_next.message,msg);
-            strcpy(to_send_next.recipiant,rec);
+            strcpy(to_send[last_msg_id].message,msg);
+            strcpy(to_send[last_msg_id].recipiant,rec);
+            to_send[last_msg_id].sent=0;
+            last_msg_id++;
+            if(last_msg_id==32)
+            {
+                cleanup();
+                last_msg_id=0;
+            }
             
             break;
     }
 }
 
 //funkcja opisującą zachowanie wątku - musi przyjmować argument typu (void *) i zwracać (void *)
-void *ThreadBehavior(void *t_data)
+void *MainThreadBehavior(void *t_data)
 {
-    pthread_detach(pthread_self());
-    struct thread_data_t *th_data = malloc(sizeof(struct thread_data_t));
-    th_data=(struct thread_data_t*)t_data;
-    char msg[4096]={0};
-
-    //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
-    read((*th_data).sock_desc,msg,4096);
-    printf("Odczytano dane\n");
-    handleInput(msg,(*th_data).sock_desc);
-
+    while(1)
+    {
+        for(int i=0;i<last_id;i++)
+        {
+            char msg[4096]={0};
+            
+            //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
+            read(client_list[i].sock_desc,msg,4096);
+            printf("Odczytano dane\n");
+            handleInput(msg,client_list[i].sock_desc);
+            
+            //wyslanie wszystkich wiadomości do odbiorcy
+            for(int j=0;j<last_msg_id;j++)
+            {
+                if(!strcmp(client_list[i].nick,to_send[j].recipiant))
+                {
+                    if(!to_send[j].sent)
+                    {
+                        write(client_list[i].sock_desc,msg,4096);
+                        printf("Wyslano wiadomosc\n");
+                    }
+                }
+            }
+                    
+        }
+    }
     pthread_exit(NULL);
 }
 
 //funkcja obsługująca połączenie z nowym klientem
 void handleConnection(int connection_socket_descriptor) {
-    //wynik funkcji tworzącej wątek
-    int create_result = 0;
-
-    //uchwyt na wątek
-    pthread_t thread1;
-
-    //dane, które zostaną przekazane do wątku
-    struct thread_data_t* t_data=malloc(sizeof(struct thread_data_t));
-
-    //wypełnienie pól struktury
-    t_data->sock_desc=connection_socket_descriptor;
-
-    create_result = pthread_create(&thread1, NULL, ThreadBehavior, (void *)t_data);
-    if (create_result){
-       printf("Błąd przy próbie utworzenia wątku, kod błędu: %d\n", create_result);
-       exit(-1);
-    }
-    printf("Utworzono watek\n");
-    
-    //zmienna przechowująca deskryptor gniazda odbiorcy
-    int recipiant_fd=-1;
-    
-    //pętla wyszukująca wśród zalogowanych użytkowników odbiorcy wiadomości
-    for(int i=0;i<last_id;i++)
-    {
-       if(!strcmp(client_list[i].nick,to_send.recipiant))
-       {
-           recipiant_fd=client_list[i].sock_desc;
-           break;
-       }
-    }
-    
-    //przesłanie wiadomości do odbiorcy
+    //bufor na wiadomosc od klienta
     char msg[4096]={0};
-    strcpy(msg,to_send.message);
-    
-    if(recipiant_fd!=-1)
-    {
-        write(recipiant_fd,msg,4096);
-        printf("Wyslano wiadomosc\n");
-    }
-    
-    //oczekiwanie na zakończenie wątku
-    pthread_join(thread1,NULL);
-    printf("Watek zakonczyl dzialanie\n");
-    
-    to_send=to_send_next;
+
+    //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
+    read(connection_socket_descriptor,msg,4096);
+    printf("Odczytano dane\n");
+    handleInput(msg,connection_socket_descriptor);
 }
 
 int main(int argc, char* argv[])
@@ -213,6 +238,22 @@ int main(int argc, char* argv[])
        exit(1);
    }
    printf("Ustawiono wielkosc kolejki\n");
+   
+    //wynik funkcji tworzącej wątek
+    int create_result = 0;
+
+    //uchwyt na wątek
+    pthread_t thread2;
+    
+    //dane, które zostaną przekazane do wątku
+    struct thread_data_t* t_data_m=malloc(sizeof(struct thread_data_t));
+
+    create_result = pthread_create(&thread2, NULL, MainThreadBehavior, (void *)t_data_m);
+    if (create_result){
+       printf("Błąd przy próbie utworzenia wątku, kod błędu: %d\n", create_result);
+       exit(-1);
+    }
+    printf("Utworzono watek\n");
 
    while(1)
    {
