@@ -131,6 +131,7 @@ public class EmailFXMLController implements Initializable {
         byte[] buffer = new byte[1000];
         try {
             InputStream is = clientSocket.getInputStream();
+            if(is.available()!= 0){
             is.read(buffer);
             System.out.println(new String(buffer, "US-ASCII"));
             String fullMsg = new String(buffer, "US-ASCII");
@@ -151,6 +152,7 @@ public class EmailFXMLController implements Initializable {
                 }
             } else {
                 throw new IllegalArgumentException("String " + fullMsg + " does not contain /");
+            }
             }
         } catch (IOException ex) {
             Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
