@@ -49,7 +49,7 @@ public class EMail extends Application {
         primaryStage.setTitle("Hello World!");
         primaryStage.setScene(scene);
         primaryStage.show();*/
-        Parent root = FXMLLoader.load(getClass().getResource("EmailFXML.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("LoginFXML.fxml"));
         
         Scene scene = new Scene(root);
         

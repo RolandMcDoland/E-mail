@@ -12,7 +12,7 @@
         <Insets top="25" right="25" bottom="25" left="25"/>
     </padding>
     <children>
-        <Label style="-fx-font-weight: bold; -fx-font-size: 24;" text="E(pic) - mail" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.columnSpan="1" fx:id= "label4" />
+        <Label style="-fx-font-weight: bold; -fx-font-size: 24;" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.columnSpan="1" fx:id= "label4" />
         <Button  text="Send/Recieve" GridPane.columnIndex = "0" GridPane.rowIndex = "0" GridPane.columnSpan="1" fx:id="sendRecieveButton" onAction = "#handleRecieve"/>
         <Button text="New Message" GridPane.columnIndex = "0" GridPane.rowIndex = "1" GridPane.columnSpan="1"  fx:id="newMessageButton" onAction = "#handleNewMessage"/>
         <Button text="New Contact" GridPane.columnIndex = "0" GridPane.rowIndex = "2" GridPane.columnSpan="1"  fx:id="newContactButton" onAction = "#handleNewContact"/>

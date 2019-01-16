@@ -140,9 +140,18 @@ public class EmailFXMLController implements Initializable {
             //nadawca - 2
             //topic - 3
             //message - 4
-            String[] parts = fullMsg.split("/");
-            Mail newMail = new Mail(parts[2], parts[3], parts[4]);
-            EMail.recievedList.add(newMail);
+            if (fullMsg.contains("/")) {
+                String[] parts = fullMsg.split("/");
+                /*System.out.println(parts[2]);
+                System.out.println(parts[3]);
+                System.out.println(parts[4]);*/
+                if(!"Serwer".equals(parts[2])){
+                    Mail newMail = new Mail(parts[2], parts[3], parts[4]);
+                    EMail.recievedList.add(newMail);
+                }
+            } else {
+                throw new IllegalArgumentException("String " + fullMsg + " does not contain /");
+            }
         } catch (IOException ex) {
             Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
             AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Error!", "Blad - sprobuj ponownie !");
@@ -211,7 +220,8 @@ public class EmailFXMLController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        Dialog<Pair<String, String>> dialog = new Dialog<>();
+        label4.setText("E(pic) - mail <<" + EMail.loggedUser + ">>");
+        /*Dialog<Pair<String, String>> dialog = new Dialog<>();
         dialog.setTitle("Login");
         dialog.setHeaderText("Log into your account: ");
 
@@ -277,7 +287,7 @@ public class EmailFXMLController implements Initializable {
                 Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
             }
             
-        });
+        });*/
         recievedL.setItems(EMail.recievedList);
         sendL.setItems(EMail.sendList);
         contactsL.setItems(EMail.contactList);

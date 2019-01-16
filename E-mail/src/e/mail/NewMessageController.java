@@ -54,10 +54,14 @@ public class NewMessageController implements Initializable {
         //M - wiadomosc
         try{
             OutputStream os = clientSocket.getOutputStream();
-            String msg = "M/" + EMail.loggedUser + "/" + mail.getFullMsg();
+            String msg = "M/" + mail.getFullMsg();
+            System.out.println(msg);
             os.write(msg.getBytes());
             AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Success!", "Wiadomosc wyslana pomyslnie !");
             EMail.sendList.add(mail);
+            Stage stage = (Stage) send.getScene().getWindow();
+            // do what you have to do
+            stage.close();
         } catch (IOException ex) {
                 Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
                 AlertHelper.showAlert(Alert.AlertType.ERROR, owner, "Error!", "Blad - sprobuj ponownie !");
@@ -74,6 +78,9 @@ public class NewMessageController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        address.setPromptText("Address");
+        topic.setPromptText("Topic");
+        textField.setPromptText("message");
         // TODO
     }    
     
