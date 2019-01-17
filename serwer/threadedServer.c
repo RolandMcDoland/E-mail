@@ -11,6 +11,7 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#include <fcntl.h>
 
 #define SERVER_PORT 8080
 #define QUEUE_SIZE 15
@@ -37,6 +38,9 @@ int last_id=0;
 //zmienna zawierająca następną wiadomość do wysłania i jej odbiorcę
 struct thread_data_t to_send[32];
 int last_msg_id=0;
+
+//uchwyt na mutex
+pthread_mutex_t con_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //funckja sprawdzająca czy użytkownik jest na liście zalogowanych i uaktualniająca jego deskryptor
 int checkPresence(char name[], int fd)
@@ -160,14 +164,22 @@ void *MainThreadBehavior(void *t_data)
 {
     while(1)
     {
+        pthread_detach(pthread_self());
+        
         for(int i=0;i<last_id;i++)
         {
             char msg[4096]={0};
             
             //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
+            pthread_mutex_lock(&con_mutex);
+            printf("Odczytuje\n");
             read(client_list[i].sock_desc,msg,4096);
-            printf("Odczytano dane\n");
-            handleInput(msg,client_list[i].sock_desc);
+            pthread_mutex_unlock(&con_mutex);
+            if(msg[0]='\0')
+            {
+                printf("Odczytano dane\n");
+                handleInput(msg,client_list[i].sock_desc);
+            }
             
             //wyslanie wszystkich wiadomości do odbiorcy
             for(int j=0;j<last_msg_id;j++)
@@ -176,14 +188,17 @@ void *MainThreadBehavior(void *t_data)
                 {
                     if(!to_send[j].sent)
                     {
-                        write(client_list[i].sock_desc,msg,4096);
+                        write(client_list[i].sock_desc,to_send[j].message,4096);
                         printf("Wyslano wiadomosc\n");
+                        
+                        to_send[j].sent=1;
                     }
                 }
             }
                     
         }
     }
+    
     pthread_exit(NULL);
 }
 
@@ -195,7 +210,14 @@ void handleConnection(int connection_socket_descriptor) {
     //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
     read(connection_socket_descriptor,msg,4096);
     printf("Odczytano dane\n");
+    
+    pthread_mutex_lock(&con_mutex);
+    printf("Mutex zamkniety\n");
     handleInput(msg,connection_socket_descriptor);
+    
+    fcntl(connection_socket_descriptor, F_SETFL, O_NONBLOCK);
+    pthread_mutex_unlock(&con_mutex);
+    printf("Mutex otwarty\n");
 }
 
 int main(int argc, char* argv[])
@@ -255,8 +277,8 @@ int main(int argc, char* argv[])
     }
     printf("Utworzono watek\n");
 
-   while(1)
-   {
+    while(1)
+    {
        connection_socket_descriptor = accept(server_socket_descriptor, NULL, NULL);
        if (connection_socket_descriptor < 0)
        {
@@ -264,10 +286,10 @@ int main(int argc, char* argv[])
            exit(1);
        }
        printf("Utworzono gniazdo polaczenia\n");
-
+        
        handleConnection(connection_socket_descriptor);
-   }
+    }
 
-   close(server_socket_descriptor);
-   return(0);
+    close(server_socket_descriptor);
+    return(0);
 }
