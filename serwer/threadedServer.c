@@ -122,17 +122,6 @@ void handleInput(char msg[],int sock_desci)
                 printf("Zapisano uzytkownika\n");
             }
             
-            //powiadomienie uzytkownika o zalogowaniu
-            strcpy(to_send[last_msg_id].message,"M/None/Serwer/Logowanie/Zalogowano");
-            strcpy(to_send[last_msg_id].recipiant,nicki);
-            to_send[last_msg_id].sent=0;
-            last_msg_id++;
-            if(last_msg_id==32)
-            {
-                cleanup();
-                last_msg_id=0;
-            }
-            
             break;
             
         //odebranie wiadomości i zapisanie jej do przekazania do odbiorcy
@@ -172,11 +161,11 @@ void *MainThreadBehavior(void *t_data)
             
             //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
             pthread_mutex_lock(&con_mutex);
-            printf("Odczytuje\n");
             read(client_list[i].sock_desc,msg,4096);
             pthread_mutex_unlock(&con_mutex);
-            if(msg[0]='\0')
+            if(strcmp(msg,""))
             {
+                printf("Message: %s\n",msg);
                 printf("Odczytano dane\n");
                 handleInput(msg,client_list[i].sock_desc);
             }
@@ -184,10 +173,12 @@ void *MainThreadBehavior(void *t_data)
             //wyslanie wszystkich wiadomości do odbiorcy
             for(int j=0;j<last_msg_id;j++)
             {
+                //printf("Message: %s, count: %d\n",to_send[j].message,last_msg_id);
                 if(!strcmp(client_list[i].nick,to_send[j].recipiant))
                 {
                     if(!to_send[j].sent)
                     {
+                        printf("Message sent: %s\n",to_send[j].message);
                         write(client_list[i].sock_desc,to_send[j].message,4096);
                         printf("Wyslano wiadomosc\n");
                         
