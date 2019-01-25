@@ -42,6 +42,27 @@ int last_msg_id=0;
 //uchwyt na mutex
 pthread_mutex_t con_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+//funkcja licząca ilość znaków w stringu
+int count_char(char msg[])
+{
+    int count=0;
+    
+    for(int i=0;i<4096;i++)
+    {
+        if(msg[i]=='/')
+        {
+            count++;
+            
+            if(count==5)
+            {
+                return count;
+            }
+        }
+    }
+    
+    return count;
+}
+
 //funkcja zwracająca długość słowa
 int wordLength(char word[])
 {
@@ -160,6 +181,46 @@ void handleInput(char msg[],int sock_desci)
     }
 }
 
+//funkcja odpowiedzialna za odbieranie wiadomości
+void receive(int fd)
+{
+    //liczba znaków '/' w odebranym buforze
+    int char_number;
+    
+    char rec_msg[4096]={0};
+    char rec_buf[4096]={0};
+        
+    pthread_mutex_lock(&con_mutex);
+    read(fd,rec_msg,4096);
+    pthread_mutex_unlock(&con_mutex);
+    
+    if(rec_msg[0]=='\0')
+    {
+        return;
+    }
+    
+    char_number=count_char(rec_msg);
+    
+    strcpy(rec_buf,rec_msg);
+    
+    while(char_number!=5)
+    {
+        char rec_msg[4096]={0};
+        
+        pthread_mutex_lock(&con_mutex);
+        read(fd,rec_msg,4096);
+        pthread_mutex_unlock(&con_mutex);
+        
+        char_number+=count_char(rec_msg);
+        
+        strcat(rec_buf,rec_msg);
+    }
+    
+    printf("Odebrano wiadomosc\n");
+    
+    handleInput(rec_buf,fd);
+}
+
 //funkcja opisującą zachowanie wątku - musi przyjmować argument typu (void *) i zwracać (void *)
 void *MainThreadBehavior(void *t_data)
 {
@@ -172,18 +233,7 @@ void *MainThreadBehavior(void *t_data)
         
         for(int i=0;i<last_id;i++)
         {
-            char msg[4096]={0};
-            
-            //odczytanie danych i przekazanie ich do funkcji zajmującej się ich przetwarzaniem
-            pthread_mutex_lock(&con_mutex);
-            read(client_list[i].sock_desc,msg,4096);
-            pthread_mutex_unlock(&con_mutex);
-            if(strcmp(msg,""))
-            {
-                printf("Message: %s\n",msg);
-                printf("Odczytano dane\n");
-                handleInput(msg,client_list[i].sock_desc);
-            }
+            receive(client_list[i].sock_desc);
             
             //wyslanie wszystkich wiadomości do odbiorcy
             for(int j=0;j<last_msg_id;j++)
