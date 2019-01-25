@@ -42,6 +42,18 @@ int last_msg_id=0;
 //uchwyt na mutex
 pthread_mutex_t con_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+//funkcja zwracająca długość słowa
+int wordLength(char word[])
+{
+    for(int i=0;i<4096;i++)
+    {
+        if(word[i]==0)
+        {
+            return i;
+        }
+    }
+}
+
 //funckja sprawdzająca czy użytkownik jest na liście zalogowanych i uaktualniająca jego deskryptor
 int checkPresence(char name[], int fd)
 {
@@ -151,6 +163,9 @@ void handleInput(char msg[],int sock_desci)
 //funkcja opisującą zachowanie wątku - musi przyjmować argument typu (void *) i zwracać (void *)
 void *MainThreadBehavior(void *t_data)
 {
+    //długość wiadomości
+    int length;
+    
     while(1)
     {
         pthread_detach(pthread_self());
@@ -178,8 +193,9 @@ void *MainThreadBehavior(void *t_data)
                 {
                     if(!to_send[j].sent)
                     {
-                        printf("Message sent: %s\n",to_send[j].message);
-                        write(client_list[i].sock_desc,to_send[j].message,4096);
+                        length=wordLength(to_send[j].message);
+                        
+                        write(client_list[i].sock_desc,to_send[j].message,length);
                         printf("Wyslano wiadomosc\n");
                         
                         to_send[j].sent=1;
