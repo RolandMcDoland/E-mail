@@ -49,6 +49,18 @@ public class EmailFXMLController implements Initializable {
     public static Mail mailDetails;
     public static Contact contactDetails;
     
+    private boolean validate(String message){
+        int count = 0;
+        for (int i=0; i < message.length(); i++){
+            if (message.charAt(i) == '/')
+            {
+                count++;
+            }
+            if(count == 5) return true;
+        }
+        return false;
+    }
+    
     @FXML
     private Label label1;
     
@@ -128,31 +140,33 @@ public class EmailFXMLController implements Initializable {
     @FXML private void handleRecieve(Event event) throws IOException{
         //TODO - recieve by socket
         Window owner = sendRecieveButton.getScene().getWindow();
-        byte[] buffer = new byte[1000];
+        byte[] buffer = new byte[4096];
         try {
+            String fullMsg = "";
+            String rcv;
             InputStream is = clientSocket.getInputStream();
             if(is.available()!= 0){
-            is.read(buffer);
-            System.out.println(new String(buffer, "US-ASCII"));
-            String fullMsg = new String(buffer, "US-ASCII");
-            //TODO create email
-            //M - message - 0
-            //odbiorca - 1
-            //nadawca - 2
-            //topic - 3
-            //message - 4
-            if (fullMsg.contains("/")) {
-                String[] parts = fullMsg.split("/");
-                /*System.out.println(parts[2]);
-                System.out.println(parts[3]);
-                System.out.println(parts[4]);*/
-                if(!"Serwer".equals(parts[2])){
-                    Mail newMail = new Mail(parts[2], parts[3], parts[4]);
-                    EMail.recievedList.add(newMail);
+                do{
+                    is.read(buffer);
+                    rcv = new String(buffer, "US-ASCII");
+                    System.out.println(rcv);
+                    fullMsg += rcv;
+                }while(!validate(fullMsg));
+                //TODO create email
+                //M - message - 0
+                //odbiorca - 1
+                //nadawca - 2
+                //topic - 3
+                //message - 4
+                if (fullMsg.contains("/")) {
+                    String[] parts = fullMsg.split("/");
+                    if(!"Serwer".equals(parts[2])){
+                        Mail newMail = new Mail(parts[2], parts[3], parts[4]);
+                        EMail.recievedList.add(newMail);
+                    }
+                } else {
+                    throw new IllegalArgumentException("String " + fullMsg + " does not contain /");
                 }
-            } else {
-                throw new IllegalArgumentException("String " + fullMsg + " does not contain /");
-            }
             }
         } catch (IOException ex) {
             Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
@@ -223,73 +237,7 @@ public class EmailFXMLController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         label4.setText("E(pic) - mail <<" + EMail.loggedUser + ">>");
-        /*Dialog<Pair<String, String>> dialog = new Dialog<>();
-        dialog.setTitle("Login");
-        dialog.setHeaderText("Log into your account: ");
-
-        // Set the icon (must be included in the project).
-        //dialog.setGraphic(new ImageView(this.getClass().getResource("login.png").toString()));
-
-        // Set the button types.
-        ButtonType loginButtonType = new ButtonType("Log in", ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
-
-        // Create the username and password labels and fields.
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField address = new TextField();
-        address.setPromptText("Address");
-        PasswordField pass = new PasswordField();
-        pass.setPromptText("Password");
-
-        grid.add(new Label("Name:"), 0, 0);
-        grid.add(address, 1, 0);
-        grid.add(new Label("Address:"), 0, 1);
-        grid.add(pass, 1, 1);
-
-        // Enable/Disable login button depending on whether a username was entered.
-        Node loginButton = dialog.getDialogPane().lookupButton(loginButtonType);
-        loginButton.setDisable(true);
-
-        // Do some validation (using the Java 8 lambda syntax).
-        address.textProperty().addListener((observable, oldValue, newValue) -> {
-            loginButton.setDisable(newValue.trim().isEmpty());
-        });
-
-        dialog.getDialogPane().setContent(grid);
-
-        // Request focus on the username field by default.
-        Platform.runLater(() -> address.requestFocus());
-
-        // Convert the result to a username-password-pair when the login button is clicked.
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == loginButtonType) {
-                return new Pair<>(address.getText(), pass.getText());
-            }
-            return null;
-        });
-
-        Optional<Pair<String, String>> result = dialog.showAndWait();
         
-        result.ifPresent(usernamePassword -> {
-            //TODO - login via socket
-            //L - login
-            //nick - toSend
-            try {
-                
-                OutputStream os = clientSocket.getOutputStream();
-                EMail.loggedUser = address.getText();
-                String msg = "L/"+address.getText()+"/";
-                os.write(msg.getBytes());
-                //EMail.contactList.add(new Contact(usernamePassword.getKey(), usernamePassword.getValue()));
-            } catch (IOException ex) {
-                Logger.getLogger(EmailFXMLController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-        });*/
         recievedL.setItems(EMail.recievedList);
         sendL.setItems(EMail.sendList);
         contactsL.setItems(EMail.contactList);
