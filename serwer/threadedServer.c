@@ -95,13 +95,25 @@ int checkPresence(char name[], int fd)
 //funkcja czyszcząca tablicę to_send
 void cleanup()
 {
+    int counter=0;
+    
     for(int i=0;i<32;i++)
     {
+        if(!to_send[i].sent)
+        {
+            strcpy(to_send[counter].recipiant,to_send[i].recipiant);
+            strcpy(to_send[counter].message,to_send[i].message);
+            to_send[i].sent=0;
+            counter++;
+        }
+                
         for(int j=0;j<16;j++)
         {
             to_send[i].recipiant[j]=0;
         }
     }
+    
+    last_msg_id=counter;
 }
 
 //funkcja znajdująca odpowiedni element w przesłanym tekście
@@ -126,6 +138,18 @@ char* findElement(char msg[])
     }
     
     return element;
+}
+
+//funkcja wylogowująca użytkownika
+void logout(char usr[])
+{
+    for(int i=0;i<last_id;i++)
+    {
+        if(!strcmp(usr,client_list[i].nick))
+        {
+            client_list[i].sock_desc=-1;
+        }
+    }
 }
 
 //funkcja przetwarzająca dane wysłane przez klienta
@@ -174,8 +198,19 @@ void handleInput(char msg[],int sock_desci)
             if(last_msg_id==32)
             {
                 cleanup();
-                last_msg_id=0;
             }
+            
+            break;
+            
+        case 'W':
+            printf("Wylogowywanie\n");
+            
+            //odbiorca wiadomości
+            char user[16]={0};
+            
+            strcpy(user,findElement(msg));
+            
+            logout(user);
             
             break;
     }
@@ -186,6 +221,7 @@ void receive(int fd)
 {
     //liczba znaków '/' w odebranym buforze
     int char_number;
+    int size=5;
     
     char rec_msg[4096]={0};
     char rec_buf[4096]={0};
@@ -198,12 +234,16 @@ void receive(int fd)
     {
         return;
     }
+    else if(rec_msg[0]=='W')
+    {
+        size=2;
+    }
     
     char_number=count_char(rec_msg);
     
     strcpy(rec_buf,rec_msg);
     
-    while(char_number!=5)
+    while(char_number!=size)
     {
         char rec_msg[4096]={0};
         
@@ -233,24 +273,29 @@ void *MainThreadBehavior(void *t_data)
         
         for(int i=0;i<last_id;i++)
         {
-            receive(client_list[i].sock_desc);
-            
-            //wyslanie wszystkich wiadomości do odbiorcy
-            for(int j=0;j<last_msg_id;j++)
+            //jeżeli klient nie jest odłączony
+            if(client_list[i].sock_desc!=-1)
             {
-                //printf("Message: %s, count: %d\n",to_send[j].message,last_msg_id);
-                if(!strcmp(client_list[i].nick,to_send[j].recipiant))
+                receive(client_list[i].sock_desc);
+                
+                //wysłanie wszystkich wiadomości do odbiorcy
+                for(int j=0;j<last_msg_id;j++)
                 {
-                    if(!to_send[j].sent)
+                    //printf("Message: %s, count: %d\n",to_send[j].message,last_msg_id);
+                    if(!strcmp(client_list[i].nick,to_send[j].recipiant))
                     {
-                        length=wordLength(to_send[j].message);
-                        
-                        write(client_list[i].sock_desc,to_send[j].message,length);
-                        printf("Wyslano wiadomosc\n");
-                        
-                        to_send[j].sent=1;
+                        if(!to_send[j].sent)
+                        {
+                            length=wordLength(to_send[j].message);
+                            
+                            int count=write(client_list[i].sock_desc,to_send[j].message,length);
+                            printf("Wyslano wiadomosc\n");
+                            
+                            to_send[j].sent=1;
+                        }
                     }
                 }
+            
             }
                     
         }
