@@ -14,7 +14,7 @@
     <children>
         <Label text="Login" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="1" fx:id= "label" />
         <TextField GridPane.columnIndex = "0" GridPane.rowIndex = "1" GridPane.columnSpan="1" fx:id="input" />
-        <Button text="Log In" GridPane.columnIndex = "0" GridPane.rowIndex = "2" GridPane.columnSpan="1" fx:id="log" onAction = "#handleLog"/>
-        <Button text="Cancel" GridPane.columnIndex = "1" GridPane.rowIndex = "2" GridPane.columnSpan="1"  fx:id="cancel" onAction = "#handleCancel"/>
+        <Button text="Log In" GridPane.columnIndex = "1" GridPane.rowIndex = "2" GridPane.columnSpan="1" fx:id="log" onAction = "#handleLog"/>
+        <Button text="Cancel" GridPane.columnIndex = "0" GridPane.rowIndex = "2" GridPane.columnSpan="1"  fx:id="cancel" onAction = "#handleCancel"/>
     </children>
 </GridPane>
